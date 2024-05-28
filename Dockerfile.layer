@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+# laravel 애플리케이션에 필요한 PHP 확장 모듈과 php-fpm이 포함된 이미지
+FROM php:fpm-alpine3.20 as laravel
+
+RUN apk update
+RUN apk add --update nodejs npm
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+WORKDIR /usr/app
+COPY . /usr/app
+
+RUN composer install
+
+FROM nginx:stable-alpine3.19 as nginx
+
+ARG VERSION=php83
+
+RUN apk update && apk upgrade \
+    && apk add --no-cache ${VERSION} \
+    ${VERSION}-fpm \
+    ${VERSION}-pdo \
+    ${VERSION}-opcache \
+    ${VERSION}-zip \
+    ${VERSION}-phar \
+    ${VERSION}-iconv \
+    ${VERSION}-cli \
+    ${VERSION}-curl \
+    ${VERSION}-openssl \
+    ${VERSION}-mbstring \
+    ${VERSION}-tokenizer \
+    ${VERSION}-fileinfo \
+    ${VERSION}-json \
+    ${VERSION}-xml \
+    ${VERSION}-xmlwriter \
+    ${VERSION}-simplexml \
+    ${VERSION}-dom \
+    ${VERSION}-pdo_mysql \
+    ${VERSION}-pdo_sqlite \
+    ${VERSION}-tokenizer \
+    ${VERSION}-pecl-redis
+
+COPY --from=laravel /usr/app /usr/app
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+

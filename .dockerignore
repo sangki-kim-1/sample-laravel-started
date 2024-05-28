@@ -1,0 +1,5 @@
+.env.example
+tests
+.idea
+/vendor/
+node_modules/
